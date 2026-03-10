@@ -1,0 +1,5 @@
+openai==1.30.0
+flask==3.0.3
+tavily-python==0.3.9
+chromadb==0.4.24
+sentence-transformers==2.7.0

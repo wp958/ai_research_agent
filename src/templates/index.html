@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Research Agent</title>
+    <style>
+        :root {
+            --bg: #0f1419; --card: #1a2332; --border: #2d3748;
+            --text: #e2e8f0; --muted: #718096; --accent: #4299e1;
+            --green: #48bb78; --red: #fc8181; --yellow: #ffd666;
+            --purple: #b794f4; --orange: #f6ad55;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; padding: 30px 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 2em; margin-bottom: 6px; }
+        .subtitle { color: var(--muted); font-size: 14px; }
+        .badges { margin-top: 12px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .badge { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 3px 12px; border-radius: 12px; font-size: 11px; }
+
+        .card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px; margin-bottom: 20px;
+        }
+
+        .input-row { display: flex; gap: 10px; }
+        .input-row input {
+            flex: 1; padding: 16px 20px; font-size: 15px;
+            border: 1px solid var(--border); border-radius: 10px;
+            background: var(--bg); color: var(--text); outline: none;
+            font-family: inherit;
+        }
+        .input-row input:focus { border-color: var(--accent); }
+        .btn {
+            padding: 16px 32px; border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-primary:disabled { background: #444; cursor: not-allowed; transform: none; }
+
+        .examples { margin-top: 14px; }
+        .examples span { color: var(--muted); font-size: 12px; }
+        .exp-btn {
+            background: transparent; border: 1px solid var(--border);
+            color: var(--muted); padding: 5px 14px; border-radius: 16px;
+            font-size: 12px; cursor: pointer; margin: 4px 4px 4px 0;
+            font-family: inherit; transition: all 0.2s;
+        }
+        .exp-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .loading { display: none; text-align: center; padding: 40px; color: var(--muted); }
+        .loading.show { display: block; }
+
+        .result { display: none; }
+        .result.show { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+        .q-bar {
+            background: var(--card); border-left: 4px solid var(--accent);
+            border: 1px solid var(--border); border-left: 4px solid var(--accent);
+            padding: 14px 20px; border-radius: 8px; margin-bottom: 16px;
+        }
+        .q-bar b { color: var(--accent); }
+
+        /* Steps */
+        .steps-title {
+            color: var(--muted); font-size: 13px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .step {
+            display: flex; gap: 12px; margin-bottom: 12px;
+            padding: 12px 16px; background: var(--bg);
+            border-radius: 8px; border: 1px solid var(--border);
+            font-size: 13px; line-height: 1.6;
+        }
+        .step-icon {
+            width: 28px; height: 28px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; flex-shrink: 0;
+        }
+        .step-receive .step-icon { background: rgba(66,153,225,0.15); }
+        .step-think .step-icon { background: rgba(183,148,244,0.15); }
+        .step-action .step-icon { background: rgba(246,173,85,0.15); }
+        .step-observe .step-icon { background: rgba(72,187,120,0.15); }
+        .step-answer .step-icon { background: rgba(66,153,225,0.15); }
+        .step-error .step-icon { background: rgba(252,129,129,0.15); }
+        .step-warning .step-icon { background: rgba(255,214,102,0.15); }
+        .step-content { flex: 1; white-space: pre-wrap; color: #a0aec0; }
+
+        /* Answer */
+        .answer-box {
+            background: linear-gradient(135deg, #162a22, #1a2e2e);
+            border: 1px solid #2a5f4f; border-radius: 12px;
+            padding: 24px; margin-top: 20px;
+        }
+        .answer-title {
+            color: var(--green); font-weight: 600; font-size: 15px;
+            margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+        }
+        .answer-body {
+            line-height: 1.8; color: #c8e0d8; font-size: 14px; white-space: pre-wrap;
+        }
+
+        footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 12px; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header>
+        <h1>&#x1F916; AI Research Agent</h1>
+        <p class="subtitle">Powered by ReAct + Function Calling + Qwen-Plus</p>
+        <div class="badges">
+            <span class="badge">&#x1F310; Web Search</span>
+            <span class="badge">&#x1F4DD; Summarize</span>
+            <span class="badge">&#x1F522; Calculate</span>
+            <span class="badge">&#x1F504; ReAct Loop</span>
+        </div>
+    </header>
+
+    <div class="card">
+        <div class="input-row">
+            <input type="text" id="question" placeholder="Ask anything... the Agent will think and use tools"
+                   onkeypress="if(event.keyCode===13)ask()">
+            <button class="btn btn-primary" id="askBtn" onclick="ask()">Ask</button>
+        </div>
+
+        <div class="examples">
+            <span>&#x1F4A1; Try:</span>
+            <button class="exp-btn" onclick="setQ(this.textContent)">2024年AI Agent最新发展趋势是什么？</button>
+            <button class="exp-btn" onclick="setQ(this.textContent)">帮我计算 (15*32 + 480) / 12</button>
+            <button class="exp-btn" onclick="setQ(this.textContent)">搜索马斯克最近做了什么，总结要点</button>
+            <button class="exp-btn" onclick="setQ(this.textContent)">What is RAG in AI?</button>
+            <button class="exp-btn" onclick="setQ(this.textContent)">根据资本论，什么是商品？</button>
+            <button class="exp-btn" onclick="setQ(this.textContent)">什么是剩余价值？资本论怎么说的</button>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div style="font-size:32px;margin-bottom:12px;">&#x1F9E0;</div>
+        <div>Agent is thinking and using tools...</div>
+    </div>
+
+    <div class="result" id="result">
+        <div class="q-bar" id="qBar"></div>
+
+        <div class="steps-title">&#x1F50D; Agent Thinking Process</div>
+        <div id="steps"></div>
+
+        <div class="answer-box">
+            <div class="answer-title">&#x2705; Final Answer</div>
+            <div class="answer-body" id="answerBody"></div>
+        </div>
+    </div>
+
+    <footer>AI Research Agent &middot; ReAct + Function Calling + Tavily + Qwen-Plus</footer>
+</div>
+
+<script>
+function setQ(q) { document.getElementById('question').value = q; }
+
+const stepIcons = {
+    receive: '&#x1F4E5;',
+    think:   '&#x1F9E0;',
+    action:  '&#x26A1;',
+    observe: '&#x1F440;',
+    answer:  '&#x2705;',
+    error:   '&#x274C;',
+    warning: '&#x26A0;'
+};
+
+async function ask() {
+    const q = document.getElementById('question').value.trim();
+    if (!q) return;
+    const btn = document.getElementById('askBtn');
+    btn.disabled = true;
+    document.getElementById('loading').classList.add('show');
+    document.getElementById('result').classList.remove('show');
+    const t0 = Date.now();
+
+    try {
+        const r = await fetch('/ask', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({question: q})
+        });
+        const d = await r.json();
+        const elapsed = ((Date.now()-t0)/1000).toFixed(1);
+
+        document.getElementById('qBar').innerHTML = '<b>Q:</b> '+esc(d.question)+' <span style="color:var(--muted);font-size:12px;">('+elapsed+'s)</span>';
+
+        // Show steps
+        let stepsHtml = '';
+        for (const step of d.steps) {
+            const icon = stepIcons[step.type] || '&#x2022;';
+            stepsHtml += '<div class="step step-'+step.type+'"><div class="step-icon">'+icon+'</div><div class="step-content">'+esc(step.content)+'</div></div>';
+        }
+        document.getElementById('steps').innerHTML = stepsHtml;
+
+        // Show answer
+        document.getElementById('answerBody').textContent = d.answer;
+        document.getElementById('result').classList.add('show');
+
+    } catch(e) {
+        alert('Error: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        document.getElementById('loading').classList.remove('show');
+    }
+}
+
+function esc(t) { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+
+document.getElementById('question').focus();
+</script>
+</body>
+</html>
