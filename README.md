@@ -96,7 +96,7 @@ Step 5: 回答 - 生成最终答案
 
 | 模块 | 技术 | 选型理由 |
 |:---|:---|:---|
-| **Agent框架** | 原生实现（无LangChain） | 理解底层原理，面试可深入讲解 |
+| **Agent框架** | 原生实现（无LangChain） | 理解底层原理 |
 | **工具调用** | OpenAI Function Calling | Qwen-Plus 原生支持，稳定可靠 |
 | **网络搜索** | Tavily API | 专为 AI Agent 设计，返回结构化结果 |
 | **知识库** | ChromaDB + text2vec | 复用 RAG 项目，语义检索 |
@@ -280,3 +280,4 @@ GitHub: @wp958
 
 
 相关项目：资本论 RAG 问答系统
+
